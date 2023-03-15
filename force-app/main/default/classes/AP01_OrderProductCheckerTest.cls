@@ -1,14 +1,21 @@
 @isTest
 private class AP01_OrderProductCheckerTest {
+    static Integer NUM_OF_ACCOUNTS = 1;
+    static Integer NUM_OF_ORDERS = 1;
+
+    /**
+     * Create test data by inserting one account and one order.
+     */
+    static List<Order> createTestData() {
+        return TestDataFactory.insertData(NUM_OF_ACCOUNTS, NUM_OF_ORDERS);
+    } 
     
         // Test method to check orders without products
         @isTest
         static void testCheckProducts_NoProducts() {
             // Create test data by inserting one account and one order
-            Integer numOfAccounts = 1;
-            Integer numOfOrders = 1;
-            List<Order> listOrders = TestDataFactory.insertData(numOfAccounts, numOfOrders);
-            
+            List<Order> listOrders = createTestData();
+
             // Change the status of the orders to 'Activated' and delete the order items
             List<Order> orders = [SELECT Id, Status, (SELECT Id FROM OrderItems) FROM Order];
             List<OrderItem> orderItemsToDelete = new List<OrderItem>();
@@ -49,9 +56,7 @@ private class AP01_OrderProductCheckerTest {
         @isTest
         static void testCheckProducts_WithProducts() {
             // Create test data by inserting one account and one order
-            Integer numOfAccounts = 1;
-            Integer numOfOrders = 1;
-            List<Order> listOrders = TestDataFactory.insertData(numOfAccounts, numOfOrders);
+            List<Order> listOrders = createTestData();
             
             // Change the status of the orders to 'Activated' without deleting any order items
             List<Order> orders = [SELECT Id, Status, (SELECT Id FROM OrderItems) FROM Order];
@@ -81,10 +86,8 @@ private class AP01_OrderProductCheckerTest {
         }
         @isTest
         static void testActiveFlagOnAccountWhenOrderDeleted() {
-            // Create test data
-            Integer numOfAccounts = 1;
-            Integer numOfOrders = 1;
-            List<Order> listOrders = TestDataFactory.insertData(numOfAccounts, numOfOrders);
+            // Create test data by inserting one account and one order
+            List<Order> listOrders = createTestData();
             
             // Check that the account is active before the order is deleted
             Account updatedAccount = [SELECT Active__c FROM Account WHERE Id = :listOrders[0].AccountId  ];
@@ -102,14 +105,10 @@ private class AP01_OrderProductCheckerTest {
         
         @isTest
         static void testActiveFlagOnAccountWithOrder() {
-            Integer numOfAccounts = 1;
-            Integer numOfOrders = 1;
-            
             // Create test data with an order that will be deleted
-            List<Order> listOrdersdelete = TestDataFactory.insertData(numOfAccounts, numOfOrders);
-            
-            // Create test data with an order that will not be deleted
-            List<Order> listOrdersNoDelete = TestDataFactory.insertData(numOfAccounts, numOfOrders);
+            List<Order> listOrdersdelete = createTestData();
+            // Create test data with an order that will not be deleted            
+            List<Order> listOrdersNoDelete = createTestData();
         
             // Check that the account is active when it has an order
             Account updatedAccountWithOrder = [SELECT Active__c FROM Account WHERE Id = :listOrdersNoDelete[0].AccountId  ];

@@ -3,7 +3,7 @@ global class APB01_ReminderAccountBatch implements  Database.Batchable<sObject>{
     public String query;
     // Query to retrieve accounts without orders and without "Call" reminder tasks
     global Database.QueryLocator start(Database.BatchableContext bc){
-        String query = 'SELECT Id FROM Account WHERE Id NOT IN (SELECT WhatId FROM Task WHERE Subject = \'Call\') AND Id NOT IN (SELECT AccountId FROM Order)';
+        String query = 'SELECT OwnerId, (SELECT Id FROM Orders), (SELECT Id FROM Tasks WHERE Subject=\'Call\') FROM Account';
         return Database.getQueryLocator(query);
     }
     
@@ -11,6 +11,7 @@ global class APB01_ReminderAccountBatch implements  Database.Batchable<sObject>{
          List<Task> tasksToInsert = new List<Task>();
         for ( Account acc : scope){
             // Creating a reminder task for each retrieved account
+            if(acc.Orders.size() == 0 && acc.Tasks.size() == 0){
             Task t = new Task();
             t.Subject = 'Call';
             t.Priority = 'Normal';
@@ -20,7 +21,8 @@ global class APB01_ReminderAccountBatch implements  Database.Batchable<sObject>{
             t.ActivityDate = System.today() + 5; // Automatic reminder in one week
             tasksToInsert.add(t);
         }
-                // Inserting the tasks into the database
+    }
+        // Inserting the tasks into the database
         insert tasksToInsert;
     }
     
