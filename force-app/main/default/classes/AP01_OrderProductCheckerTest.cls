@@ -20,14 +20,14 @@ private class AP01_OrderProductCheckerTest {
             List<OrderItem> orderItemsToDelete = new List<OrderItem>();
             List<Order> odrToUpd = new List<Order>();
                     
-            for(Order order : orders){
-                for(OrderItem orderItem : order.OrderItems){
-                    delete orderItem ;
+            for (Order order : orders) {
+                for (OrderItem orderItem : order.OrderItems) {
+                    orderItemsToDelete.add(orderItem);
                 }
-                order.Status = 'Activated';
+                odrToUpd.add(order);
             }
-    
-            //System.debug('odrToUpd : ' + odrToUpd);
+            // Delete the order items
+                delete orderItemsToDelete;
     
             // Update the orders and expect an exception if there are no products
             Test.startTest();
@@ -41,9 +41,9 @@ private class AP01_OrderProductCheckerTest {
             Test.stopTest();
     
             // Verify that the status of the orders without products is still 'Draft'
-            for(Order order : odrToUpd){
-                Order updatedOrder = [SELECT Id, Status FROM Order WHERE Id = :order.Id];
-                System.assertEquals('Draft', updatedOrder.Status);
+            orders = [SELECT Status, (SELECT Id FROM OrderItems) FROM Order];
+            for(Order order : orders){
+                System.assertEquals('Draft', orders.Status);
             }
         }
     
@@ -70,8 +70,8 @@ private class AP01_OrderProductCheckerTest {
             Test.stopTest();
     
             // Verify that the status of the orders with products is 'Activated'
+            orders = [SELECT Id, Status, (SELECT Id FROM OrderItems) FROM Order];
             for(Order order : orders){
-                Order updatedOrder = [SELECT Id, Status FROM Order WHERE Id = :order.Id];
                 System.assertEquals('Activated', updatedOrder.Status);
             }
         }

@@ -1,11 +1,11 @@
 public class AP01_OrderProductChecker {
-    public static void checkProducts(List<Order> newOrders, Map<Id, Order> oldOrders) {
-        for (Order newOrder : newOrders) {
+    public static void checkProducts(Map<Id, Order> newOrders, Map<Id, Order> oldOrders) {
+        List<Order> items = [SELECT Status, (SELECT Id FROM OrderItems) FROM Order WHERE Id IN :newOrders.keySet()];
+        for (Order newOrder : items) {
             // récupérer l'objet Order correspondant à la nouvelle commande dans la carte oldOrders
             Order oldOrder = oldOrders.get(newOrder.Id);
             if (newOrder.Status == 'Activated' && oldOrder.Status == 'Draft') {
-                List<OrderItem> items = [SELECT Id FROM OrderItem WHERE OrderId = :newOrder.Id];
-                if (items.isEmpty()) {
+                if (newOrder.OrderItems.size() == 0 ) {
                     newOrder.addError('L\'order doit avoir au moins un produit avant d\'être activé.');
                 }
             }
@@ -16,16 +16,15 @@ public class AP01_OrderProductChecker {
         for (Order o : deletedOrders) {
             accountIds.add(o.AccountId);
         }
-
-        Account accountsToUpdate = new Account();
-        for (Id accountId : accountIds) {
-             accountsToUpdate = [SELECT Active__c, (SELECT Id FROM Orders WHERE AccountId =: accountId) FROM Account WHERE Id = :accountId ];
-            if (accountsToUpdate.Orders.isEmpty()) {
-                accountsToUpdate.active__c = false;
-                update accountsToUpdate;
+        List<Account> accountsToUpdate = [SELECT Id, Active__c, (SELECT Id FROM Orders WHERE AccountId =: accountIds) FROM Account WHERE Id IN :accountIds];
+        for (Account acc : accountsToUpdate) {
+            if (acc.Orders.isEmpty()) {
+                acc.active__c = false;
+            } else {
+                acc.active__c = true;
             }
         }
-
+        update accountsToUpdate;
 
     }
 }

@@ -12,7 +12,6 @@ public with sharing class TestDataFactory {
                 accounts.add(a);
             }
             insert accounts;
-            System.debug('hamada account : ' + accounts);
             return accounts;
         }
         public static Product2 createProducts(Integer numOfProducts) {
